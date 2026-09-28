@@ -21,77 +21,6 @@
  ],
  "rows": [
   {
-   "goal": "1.1",
-   "title": "Accuracy on the four annotated books",
-   "cited": 9,
-   "not_in_audit": [],
-   "not_experiment_artifacts": [],
-   "weakest_evidence": "exploratory",
-   "classifications": {
-    "supported_structure": 2,
-    "exploratory": 1,
-    "provisional": 6
-   },
-   "dirty_artifacts": 4,
-   "no_commit": 1,
-   "artifacts": [
-    {
-     "name": "candidate_restriction.json",
-     "classification": "supported_structure",
-     "dirty": false,
-     "commit": "57bd23a3"
-    },
-    {
-     "name": "external_comparability.json",
-     "classification": "supported_structure",
-     "dirty": true,
-     "commit": "925a106f"
-    },
-    {
-     "name": "light_novel_coverage.json",
-     "classification": "exploratory",
-     "dirty": null,
-     "commit": ""
-    },
-    {
-     "name": "lora_serving_eval__new-author_heldout_balanced-grimgar03.json",
-     "classification": "provisional",
-     "dirty": true,
-     "commit": "be3e7ead"
-    },
-    {
-     "name": "lora_serving_eval__qwen3-14b-mixed-local-9070xt-inrepo-batch1-20260912.json",
-     "classification": "provisional",
-     "dirty": true,
-     "commit": "6ed99112"
-    },
-    {
-     "name": "lora_serving_eval__qwen3-14b-mixed-local-9070xt-inrepo-batch25-20260912.json",
-     "classification": "provisional",
-     "dirty": true,
-     "commit": "6ed99112"
-    },
-    {
-     "name": "two_stage_attribution_w16000.json",
-     "classification": "provisional",
-     "dirty": false,
-     "commit": "b2fd16b7"
-    },
-    {
-     "name": "two_stage_attribution_w3200.json",
-     "classification": "provisional",
-     "dirty": false,
-     "commit": "9c7a7032"
-    },
-    {
-     "name": "two_stage_attribution_w8000.json",
-     "classification": "provisional",
-     "dirty": false,
-     "commit": "b2fd16b7"
-    }
-   ]
-  },
-  {
    "goal": "1.3",
    "title": "Generalisation beyond the four books",
    "cited": 20,
@@ -289,14 +218,14 @@
   {
    "goal": "2.7",
    "title": "Adapters must not be trained on their own test data",
-   "cited": 13,
+   "cited": 14,
    "not_in_audit": [],
    "not_experiment_artifacts": [
     "manifest.json"
    ],
    "weakest_evidence": "supported_structure",
    "classifications": {
-    "supported_structure": 12
+    "supported_structure": 13
    },
    "dirty_artifacts": 8,
    "no_commit": 0,
@@ -372,6 +301,12 @@
      "classification": "supported_structure",
      "dirty": true,
      "commit": "2741538d"
+    },
+    {
+     "name": "voice_val_contamination_audit_20260928.json",
+     "classification": "supported_structure",
+     "dirty": false,
+     "commit": "97a9d231"
     }
    ]
   },
@@ -487,49 +422,14 @@
    ]
   },
   {
-   "goal": "5.3",
-   "title": "Three-pass vs single-pass generation",
-   "cited": 4,
-   "not_in_audit": [],
-   "not_experiment_artifacts": [
-    "config.json"
-   ],
-   "weakest_evidence": "supported_structure",
-   "classifications": {
-    "supported_structure": 3
-   },
-   "dirty_artifacts": 1,
-   "no_commit": 0,
-   "artifacts": [
-    {
-     "name": "script_text_fidelity.json",
-     "classification": "supported_structure",
-     "dirty": true,
-     "commit": "38ce596a"
-    },
-    {
-     "name": "three_pass_vs_single_mapped.json",
-     "classification": "supported_structure",
-     "dirty": false,
-     "commit": "a7e0a996"
-    },
-    {
-     "name": "three_pass_vs_single_pdnc.json",
-     "classification": "supported_structure",
-     "dirty": false,
-     "commit": "74d1f6b0"
-    }
-   ]
-  },
-  {
    "goal": "5.4",
    "title": "Transcription and clip boundaries in the preparer",
-   "cited": 8,
+   "cited": 10,
    "not_in_audit": [],
    "not_experiment_artifacts": [],
    "weakest_evidence": "exploratory",
    "classifications": {
-    "supported_structure": 6,
+    "supported_structure": 8,
     "exploratory": 2
    },
    "dirty_artifacts": 1,
@@ -552,6 +452,18 @@
      "classification": "supported_structure",
      "dirty": false,
      "commit": "c509cd2e"
+    },
+    {
+     "name": "asr_japanese_leadin.json",
+     "classification": "supported_structure",
+     "dirty": false,
+     "commit": "1c8771ba"
+    },
+    {
+     "name": "asr_readalong_ja_confirmation.json",
+     "classification": "supported_structure",
+     "dirty": false,
+     "commit": "4615b446"
     },
     {
      "name": "asr_silero_vad_ja_holdout.json",
@@ -695,6 +607,77 @@
      "classification": "exploratory",
      "dirty": null,
      "commit": ""
+    }
+   ]
+  },
+  {
+   "goal": "1.1",
+   "title": "Accuracy on the four annotated books",
+   "cited": 9,
+   "not_in_audit": [],
+   "not_experiment_artifacts": [],
+   "weakest_evidence": "exploratory",
+   "classifications": {
+    "supported_structure": 2,
+    "exploratory": 1,
+    "provisional": 6
+   },
+   "dirty_artifacts": 4,
+   "no_commit": 1,
+   "artifacts": [
+    {
+     "name": "candidate_restriction.json",
+     "classification": "supported_structure",
+     "dirty": false,
+     "commit": "57bd23a3"
+    },
+    {
+     "name": "external_comparability.json",
+     "classification": "supported_structure",
+     "dirty": true,
+     "commit": "925a106f"
+    },
+    {
+     "name": "light_novel_coverage.json",
+     "classification": "exploratory",
+     "dirty": null,
+     "commit": ""
+    },
+    {
+     "name": "lora_serving_eval__new-author_heldout_balanced-grimgar03.json",
+     "classification": "provisional",
+     "dirty": true,
+     "commit": "be3e7ead"
+    },
+    {
+     "name": "lora_serving_eval__qwen3-14b-mixed-local-9070xt-inrepo-batch1-20260912.json",
+     "classification": "provisional",
+     "dirty": true,
+     "commit": "6ed99112"
+    },
+    {
+     "name": "lora_serving_eval__qwen3-14b-mixed-local-9070xt-inrepo-batch25-20260912.json",
+     "classification": "provisional",
+     "dirty": true,
+     "commit": "6ed99112"
+    },
+    {
+     "name": "two_stage_attribution_w16000.json",
+     "classification": "provisional",
+     "dirty": false,
+     "commit": "b2fd16b7"
+    },
+    {
+     "name": "two_stage_attribution_w3200.json",
+     "classification": "provisional",
+     "dirty": false,
+     "commit": "9c7a7032"
+    },
+    {
+     "name": "two_stage_attribution_w8000.json",
+     "classification": "provisional",
+     "dirty": false,
+     "commit": "b2fd16b7"
     }
    ]
   },
@@ -883,6 +866,41 @@
      "classification": "exploratory",
      "dirty": null,
      "commit": ""
+    }
+   ]
+  },
+  {
+   "goal": "5.3",
+   "title": "Three-pass vs single-pass generation",
+   "cited": 4,
+   "not_in_audit": [],
+   "not_experiment_artifacts": [
+    "config.json"
+   ],
+   "weakest_evidence": "supported_structure",
+   "classifications": {
+    "supported_structure": 3
+   },
+   "dirty_artifacts": 1,
+   "no_commit": 0,
+   "artifacts": [
+    {
+     "name": "script_text_fidelity.json",
+     "classification": "supported_structure",
+     "dirty": true,
+     "commit": "38ce596a"
+    },
+    {
+     "name": "three_pass_vs_single_mapped.json",
+     "classification": "supported_structure",
+     "dirty": false,
+     "commit": "a7e0a996"
+    },
+    {
+     "name": "three_pass_vs_single_pdnc.json",
+     "classification": "supported_structure",
+     "dirty": false,
+     "commit": "74d1f6b0"
     }
    ]
   },
