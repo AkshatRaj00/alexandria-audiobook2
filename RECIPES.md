@@ -1009,6 +1009,33 @@ the adapter arm's accuracy is not a held-out number; the base collapse is the fi
 
 Artifacts: `lora_serving_eval__muse-iq2xxs-flagdiag-{A,B,C}-tnr-2-20260927.json`.
 
+### Overnight cells, 2026-09-27/28 (nine novels, paired, 2,655 rows)
+
+Each row says whether the adapter was served its **training** prompt (see §"Every Gemma row
+in this section was served off its training prompt"). **All nine novels are held out for
+every adapter in this table**: the window25 and KL adapters trained on 19 PDNC novels that
+exclude the whole evaluation set, so the all-nine column is the held-out result. The
+eight-novel column (The Sun Also Rises removed) is kept only for comparison with the
+rights-clean michel2 adapters, which did train on it.
+
+| cell | prompt | base → adapter (all nine, held out) | without Sun (8) | collateral |
+|---|---|---|---|---:|
+| A3B window25 UD-Q4_K_XL (tnr-1) | on | 91.9 → 91.0, −0.8 (+78/−100, p=0.12) | +0.6 (p=0.24) | 4.1% |
+| Gemma 12B window25 Q4_K_M (tnr-0) | **off** | 83.2 → 86.3, **+3.1** (+174/−92, p=6e−7) | +2.6 (p=3e−5) | 4.2% |
+| Muse KL seed 2, Q3_K_XL (tnr-2) | on | 94.5 → 95.3, +0.8 (+72/−51, p=0.07) | **+1.3** (p=0.001) | 2.0% |
+| Muse KL seed 1, Q3_K_XL (tnr-2, 09-26) | on | 94.5 → 95.1, +0.7 (+64/−46, p=0.10) | +0.7 (p=0.09) | 1.8% |
+| Muse KL seed 2, IQ3_M (tnr-4) | **off** | 91.7 → 93.2, **+1.5** (+107/−67, p=0.003) | +0.9 (p=0.09) | 2.8% |
+| Muse KL seed 1, IQ3_M (tnr-4, 09-26) | **off** | 91.7 → 93.3, +1.6 (+134/−92, p=0.006) | +2.1 (p=9e−5) | 3.8% |
+
+- **The KL recipe replicates across seeds** at both rungs: +0.8 vs +0.7 at Q3_K_XL, +1.5 vs
+  +1.6 at IQ3_M, collateral 2–4% throughout. Small and real at IQ3_M, marginal at Q3_K_XL.
+- **A3B window25 is flat at Q4_K_XL** (base 91.9): the gain falls across the ladder, IQ1_M
+  +2.8, IQ3_XXS +1.6, Q4_K_XL −0.8 — the repair-not-improvement shape, on its training prompt.
+- **Gemma 12B at Q4_K_M: +3.1 off-prompt**, above the +2.11 its Q8_0 cell read. The on-prompt
+  twin (same file and adapter, tnr-2) is running; the pair isolates the prompt for Gemma.
+
+Artifacts in `ab_test_runtime/cloud_pull_20260928/`.
+
 ### A fourth family, and the same shape
 
 | Gemma window25 adapter | base | adapter | delta |
@@ -1039,9 +1066,12 @@ template present, verified in the file) the nine-novel picture is different:
 
 Artifacts: `lora_serving_eval__gemma4-e2b-w25-q4km-paired-michel2_full-tnr-0-pdnc9-20260927.json`,
 `lora_serving_eval__gemma4-e4b-w25-q4km-paired-michel2_full-tnr-4-pdnc9-20260927.json`.
-E4B on the eight held-out novels (The Sun Also Rises is training data): 70.7 → 68.5,
-**−2.2** (+155/−206, p=0.008), repairing 24.8% of the base's errors and breaking 13.3%
-of its correct rows.
+All nine novels are held out for the window25 adapters (none of their 19 training novels
+is in the evaluation set), so the row above is E4B's held-out result: 67.5 → 66.6, −0.9
+(+214/−238, p=0.28), repairing 24.8% of the base's errors and breaking 13.3% of its
+correct rows. *Corrected 2026-09-28:* this paragraph first reported the eight novels
+without The Sun Also Rises (70.7 → 68.5, −2.2, p=0.008) as the held-out figure, carrying
+over a rule that applies to the rights-clean michel2 adapters, not to window25.
 
 **Every Gemma row in this section was served off its training prompt (found
 2026-09-27).** The window25 training windows carry `MICHEL2_SYSTEM` `a63e2124546ce050`
@@ -1050,7 +1080,7 @@ ran, serve the older `8447565f8afc7294` (1,825). Both arms share the prompt, so 
 pairing is fair, but none of them sees the adapter at the input it was trained on —
 including the 12B's +2.11 and E2B's +9.9. The 13–17% collateral on E2B and E4B, three
 to four times the larger bases', may be partly that mismatch; that is untested. Until
-a matched-prompt cell reads, treat E4B's −2.2 as **unmeasured at the trained prompt**,
+a matched-prompt cell reads, treat E4B's result as **unmeasured at the trained prompt**,
 not as harm. The same applies to the Muse KL IQ3_M cells on tnr-4 (seed 1 and 2). A
 matched-prompt E4B re-run is queued on tnr-4 (tag `gemma4-e4b-w25-newprompt`).
 
