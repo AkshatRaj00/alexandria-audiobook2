@@ -1051,6 +1051,12 @@
     "tests.test_candidate_scoring.ScoreTest.test_no_visible_candidate_declines_rather_than_picking",
     "tests.test_candidate_scoring.ScoreTest.test_the_best_scoring_candidate_wins"
   ],
+  "test_cast_label_warnings": [
+    "tests.test_cast_label_warnings.CastLabelWarningTests.test_actual_ui_handlers_show_escaped_warnings_and_success_counts",
+    "tests.test_cast_label_warnings.CastLabelWarningTests.test_bulk_warns_only_committed_books_and_preserves_errors_and_empty_books",
+    "tests.test_cast_label_warnings.CastLabelWarningTests.test_secondary_timeout_preserves_committed_single_assignment",
+    "tests.test_cast_label_warnings.CastLabelWarningTests.test_successful_label_recording_has_no_warning"
+  ],
   "test_chain_artifact_scope": [
     "tests.test_chain_artifact_scope.ArtifactScopeTests.test_actual_replay_loop_commits_only_dispatched_result_and_its_checkpoint",
     "tests.test_chain_artifact_scope.ArtifactScopeTests.test_current_literal_file_commits_without_other_sessions_same_folder_wip",
@@ -1521,6 +1527,9 @@
     "tests.test_config_numbers_js.ConfigNumericJsTests.test_empty_nonfinite_and_malformed_fields_keep_existing_defaults_and_zero_is_preserved",
     "tests.test_config_numbers_js.ConfigNumericJsTests.test_fractional_integer_fields_reach_server_validation_without_truncation",
     "tests.test_config_numbers_js.ConfigNumericJsTests.test_integer_fields_preserve_exponent_and_decimal_notation"
+  ],
+  "test_config_refresh_reuse_js": [
+    "tests.test_config_refresh_reuse_js.ConfigRefreshReuseTests.test_actual_callback_success_and_independent_retry"
   ],
   "test_config_regressions": [
     "tests.test_config_regressions.ConfigTests.test_app_config_loader_ignores_invalid_legacy_values_without_writing",
@@ -3973,6 +3982,9 @@
   "test_lmstudio_status_route": [
     "tests.test_lmstudio_status_route.LmStudioStatusRouteTest.test_status_uses_the_active_profile_not_the_stale_mirror"
   ],
+  "test_lmstudio_visible_poll_js": [
+    "tests.test_lmstudio_visible_poll_js.LmStudioVisiblePollJsTests.test_foreground_poll_wiring_retains_immediate_and_explicit_refreshes"
+  ],
   "test_local_audio_url_js": [
     "tests.test_local_audio_url_js.LocalAudioUrlTests.test_actual_handlers_preserve_raw_paths_and_cache_query",
     "tests.test_local_audio_url_js.LocalAudioUrlTests.test_actual_ui_urls_fetch_distinct_static_file_bytes"
@@ -4709,6 +4721,9 @@
     "tests.test_persona_recovery_claim.PersonaRecoveryClaimTests.test_cpu_only_recovery_remains_available_during_another_gpu_task",
     "tests.test_persona_recovery_claim.PersonaRecoveryClaimTests.test_resume_reserves_before_the_awaited_write_and_adopts_the_same_owner",
     "tests.test_persona_recovery_claim.PersonaRecoveryClaimTests.test_save_and_registration_failure_release_only_the_pending_reservation"
+  ],
+  "test_persona_refresh_reuse_js": [
+    "tests.test_persona_refresh_reuse_js.PersonaRefreshReuseTests.test_completed_reads_and_failure_retries"
   ],
   "test_persona_text_controls": [
     "tests.test_persona_text_controls.PersonaTextControlTests.test_both_text_fields_reject_controls_before_stripping_without_mutating_payload",
@@ -6117,6 +6132,9 @@
     "tests.test_saved_script_audit_js.SavedScriptAuditJsTests.test_old_success_cannot_replace_new_pending_or_finished_audit",
     "tests.test_saved_script_audit_js.SavedScriptAuditJsTests.test_reauditing_same_name_still_rejects_an_older_response"
   ],
+  "test_saved_script_hydration_js": [
+    "tests.test_saved_script_hydration_js.SavedScriptHydrationTests.test_hydration_overlaps_but_voices_wait_for_both_and_admission_stays_ordered"
+  ],
   "test_scene_narrowing": [
     "tests.test_scene_narrowing.BucketTest.test_a_row_with_no_gold_entry_is_skipped_not_counted_wrong",
     "tests.test_scene_narrowing.BucketTest.test_absent_is_wrong_with_the_gold_nowhere_near",
@@ -6224,6 +6242,14 @@
     "tests.test_script_recovery.RecoveryTests.test_recovery_uses_the_quote_controls_from_the_failed_run",
     "tests.test_script_recovery.RecoveryTests.test_skip_narrates_the_chunk_as_is",
     "tests.test_script_recovery.RecoveryTests.test_wrong_chunk_and_running_generation_are_refused"
+  ],
+  "test_script_recovery_response": [
+    "tests.test_script_recovery_response.ScriptRecoveryResponseTests.test_corrupt_checkpoint_fails_detail_without_hiding_metadata_or_editing_evidence",
+    "tests.test_script_recovery_response.ScriptRecoveryResponseTests.test_no_failed_checkpoint_keeps_retry_metadata_without_detail",
+    "tests.test_script_recovery_response.ScriptRecoveryResponseTests.test_optional_detail_matches_dedicated_endpoint_for_failed_passes",
+    "tests.test_script_recovery_response.ScriptRecoveryResponseTests.test_optional_reader_waits_for_complete_native_publication",
+    "tests.test_script_recovery_response.ScriptRecoveryResponseTests.test_real_ui_handler_uses_one_request_and_preserves_controls",
+    "tests.test_script_recovery_response.ScriptRecoveryResponseTests.test_stale_book_and_completed_manifest_do_not_expose_detail"
   ],
   "test_script_recovery_transaction": [
     "tests.test_script_recovery_transaction.ScriptRecoveryTransactionTests.test_delta_recovery_rolls_back_owned_parts_then_retires_them_on_success",
@@ -6808,6 +6834,8 @@
     "tests.test_task_reattachment.TaskReattachmentJsTests.test_one_failed_adapter_does_not_suppress_other_running_tasks",
     "tests.test_task_reattachment.TaskReattachmentJsTests.test_remote_persona_and_local_voicelab_both_restore",
     "tests.test_task_reattachment.TaskReattachmentJsTests.test_request_tasks_disable_until_done_and_dynamic_tasks_receive_fallback",
+    "tests.test_task_reattachment.TaskReattachmentJsTests.test_shared_script_log_controls_remain_serialized",
+    "tests.test_task_reattachment.TaskReattachmentJsTests.test_slow_review_hydration_does_not_delay_independent_controls",
     "tests.test_task_reattachment.TaskReattachmentJsTests.test_training_preparer_audio_benchmark_adapters_and_idle_dispatch"
   ],
   "test_task_start_controls_js": [

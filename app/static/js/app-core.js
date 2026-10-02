@@ -284,7 +284,9 @@
                 }
 
                 // Trigger tab specific loads
-                if (selectedLink.dataset.tab === 'editor') {
+                if (selectedLink.dataset.tab === 'setup') {
+                    pollLmStudioStatus();
+                } else if (selectedLink.dataset.tab === 'editor') {
                     loadChunks();
                 } else if (selectedLink.dataset.tab === 'voices') {
                     loadVoices(false);
@@ -914,8 +916,8 @@
             await saveConfigPayload(payload, onSaved);
         }
 
-        async function reloadPromptPresets(activeName) {
-            const config = await API.get('/api/config');
+        async function reloadPromptPresets(activeName, savedConfig = null) {
+            const config = savedConfig || await API.get('/api/config');
             activePromptPreset = activeName || (config.prompts && config.prompts.attribution_preset) || 'default';
             renderPromptPresets(config.prompt_presets || [], activePromptPreset);
         }
@@ -1468,15 +1470,16 @@
                     // Refresh is_remote from the now-active saved config (not a
                     // full loadConfig() - that resets unrelated fields to
                     // hardcoded defaults).
+                    let savedConfig = null;
                     try {
-                        const savedConfig = await API.get('/api/config');
+                        savedConfig = await API.get('/api/config');
                         currentIsRemote = !!savedConfig.is_remote;
                         failoverIsRemote = !!savedConfig.failover_is_remote;
                         renderConfigWarnings(savedConfig);
                     }
                     catch (e) { console.debug('is_remote refresh after save failed', e); }
                     showToast('Configuration Saved!', 'success');
-                    try { await reloadPromptPresets(); } catch (e) { console.debug('preset reload after save failed', e); }
+                    try { await reloadPromptPresets(undefined, savedConfig); } catch (e) { console.debug('preset reload after save failed', e); }
                 });
             } catch (e) {
                 showToast('Error saving config: ' + e.message, 'error');
@@ -1763,15 +1766,14 @@
             const retryBtn = document.getElementById('btn-retry-script');
             const panel = document.getElementById('script-recovery-panel');
             try {
-                const recovery = await API.get('/api/generate_script/recovery');
+                const recovery = await API.get('/api/generate_script/recovery?include_detail=true');
                 retryBtn.style.display = recovery.recoverable ? 'inline-block' : 'none';
                 if (recovery.recoverable) {
                     const location = recovery.failed_pass
                         ? ` at ${recovery.failed_pass}`
                         : '';
                     showToast(`Generation can resume from its checkpoint${location}.`, 'warning');
-                    const detail = await API.get('/api/generate_script/recovery/detail');
-                    renderScriptRecovery(detail.recoverable ? detail : null);
+                    renderScriptRecovery(recovery.detail || null);
                 } else {
                     renderScriptRecovery(null);
                 }
@@ -2861,9 +2863,14 @@
                         }
                     }
                     // Refresh voices and caches
-                    try { await loadVoices(); } catch (e) { console.debug('voices refresh failed', e); }
-                    try { window._designedVoicesCache = await API.get('/api/voice_design/list'); } catch (e) { console.debug('designed-voices cache prefetch failed', e); }
-                    try { window._cloneVoicesCache = await API.get('/api/clone_voices/list'); } catch (e) { console.debug('clone-voices cache prefetch failed', e); }
+                    let refreshedResources = [];
+                    try { refreshedResources = (await loadVoices()).refreshedResources; } catch (e) { console.debug('voices refresh failed', e); }
+                    if (!refreshedResources.includes('/api/voice_design/list')) {
+                        try { window._designedVoicesCache = await API.get('/api/voice_design/list'); } catch (e) { console.debug('designed-voices cache prefetch failed', e); }
+                    }
+                    if (!refreshedResources.includes('/api/clone_voices/list')) {
+                        try { window._cloneVoicesCache = await API.get('/api/clone_voices/list'); } catch (e) { console.debug('clone-voices cache prefetch failed', e); }
+                    }
                     showToast(failed ? 'Persona generation stopped; manual recovery is available.' : 'Persona generation finished', failed ? 'warning' : 'success');
                     statusSpan.innerText = '';
                     if (cancelButton) {
@@ -3144,6 +3151,7 @@
             await flushVoiceSaves();
             const reuseResources = !refreshResources && performance.now() - _voiceResourcesRefreshedAt < 10000;
             let resourcesComplete = true;
+            const refreshedResources = [];
             if (!reuseResources) { _voiceResourcesRefreshedAt = -Infinity; }
             // Fetch independent lists together; render only after dropdowns and
             // per-character cast counts are ready. Keep old optional lists on error.
@@ -3152,7 +3160,10 @@
                 ['_cloneVoicesCache', '/api/clone_voices/list', 'clone-voices'],
                 ['_loraModelsCache', '/api/lora/models', 'lora-models'],
             ].map(async ([key, path, label]) => {
-                try { window[key] = await API.get(path); }
+                try {
+                    window[key] = await API.get(path);
+                    refreshedResources.push(path);
+                }
                 catch (e) { resourcesComplete = false; console.debug(`${label} cache refresh failed`, e); }
             });
             const [voices] = await Promise.all([
@@ -3164,7 +3175,7 @@
             }
             if (reuseResources && _voiceCardsRevision === _voiceSaveSnapshot.revision
                     && _voiceCardsBookToken === _voiceSaveSnapshot.book_token) {
-                return;
+                return {refreshedResources};
             }
             refreshVoicesScope();
             const narrator = window._voicesByName.NARRATOR || window._voicesByName.Narrator;
@@ -3178,7 +3189,7 @@
                 container.innerHTML = '<div class="alert alert-info">No voices found. Generate a script first.</div>';
                 _voiceCardsRevision = _voiceSaveSnapshot.revision;
                 _voiceCardsBookToken = _voiceSaveSnapshot.book_token;
-                return;
+                return {refreshedResources};
             }
             container.innerHTML = voices.map((v, i) => createVoiceCard(v, i)).join('');
             _voiceCardsRevision = _voiceSaveSnapshot.revision;
@@ -3195,6 +3206,7 @@
             if (window._voiceSuggestions && Object.keys(window._voiceSuggestions).length) {
                 renderVoiceSuggestions();
             }
+            return {refreshedResources};
         }
 
         window.selectVoiceVersion = async function selectVoiceVersion(select) {
@@ -3869,12 +3881,17 @@
             return mapping;
         }
 
+        function getCastApplyWarningsHtml(warnings) {
+            return (warnings || []).map(warning =>
+                `<div class="alert alert-warning py-1 px-2 small mt-1 mb-0">${escapeHtml(warning)}</div>`).join('');
+        }
+
         async function submitCastApply() {
             const mapping = _collectCastApplyMapping();
             if (!Object.keys(mapping).length) { setCastStatus('Nothing selected to apply.', true); return; }
             try {
                 const res = await API.post('/api/voice_library/apply', { cast: window._selectedCast, mapping });
-                setCastStatus(`<i class="fas fa-check text-success me-1"></i>Applied ${res.count} voice${res.count !== 1 ? 's' : ''}`);
+                setCastStatus(`<i class="fas fa-check text-success me-1"></i>Applied ${res.count} voice${res.count !== 1 ? 's' : ''}${getCastApplyWarningsHtml(res.warnings)}`);
                 await loadVoices();  // re-render cards with the applied configs
             } catch (e) { setCastStatus(escapeHtml(e.message || String(e)), true); }
         }
@@ -3977,7 +3994,7 @@
                 const total = res.results.reduce((sum, r) => sum + r.count, 0);
                 const rows = res.results.map(r => `
                     <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small">
-                        <span>${escapeHtml(r.name)}</span>
+                        <div>${escapeHtml(r.name)}${getCastApplyWarningsHtml(r.warnings)}</div>
                         <span class="${r.error ? 'text-danger' : 'text-muted'}">${r.error ? escapeHtml(r.error) : `${r.count} applied`}</span>
                     </li>`).join('');
                 panel.innerHTML = `
