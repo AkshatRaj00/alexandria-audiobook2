@@ -12,27 +12,26 @@ import numpy as np
 import soundfile as sf
 
 
-MERGE_VERSION = 1
+MERGE_VERSION = 3
 
 
 def get_file_fingerprint(path: Path) -> dict:
-    stat = path.stat()
     digest = hashlib.sha256()
     with path.open("rb") as handle:
-        digest.update(handle.read(1024 * 1024))
-        if stat.st_size > 2 * 1024 * 1024:
-            handle.seek(stat.st_size - 1024 * 1024)
-            digest.update(handle.read(1024 * 1024))
+        stat = os.fstat(handle.fileno())
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
     return {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns,
-            "edge_sha256": digest.hexdigest()}
+            "sha256": digest.hexdigest()}
 
 
 def get_pcm_hash(wav_bytes: bytes) -> str:
     try:
-        audio, _sample_rate = sf.read(io.BytesIO(wav_bytes), dtype="float32", always_2d=True)
+        audio, sample_rate = sf.read(io.BytesIO(wav_bytes), dtype="float32", always_2d=True)
     except (RuntimeError, OSError, ValueError) as exc:
         raise ValueError("dataset contains unsupported or malformed audio") from exc
-    return hashlib.sha256(np.asarray(audio, dtype="<f4").tobytes()).hexdigest()
+    identity = f"{sample_rate}:".encode("ascii") + np.asarray(audio, dtype="<f4").tobytes()
+    return hashlib.sha256(identity).hexdigest()
 
 
 def get_source_records(paths: list[Path]) -> list[dict]:
@@ -47,7 +46,7 @@ def is_reusable_merge(destination: Path, sources: list[dict]) -> bool:
         with zipfile.ZipFile(destination) as archive:
             manifest = json.loads(archive.read("merge_manifest.json"))
         return manifest.get("version") == MERGE_VERSION and manifest.get("sources") == sources
-    except (OSError, KeyError, json.JSONDecodeError, zipfile.BadZipFile):
+    except (OSError, KeyError, UnicodeDecodeError, json.JSONDecodeError, zipfile.BadZipFile):
         return False
 
 

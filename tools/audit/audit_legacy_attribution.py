@@ -67,9 +67,14 @@ def _sha256(data):
 def _commit_is_in_history(commit):
     if not commit:
         return False
-    return subprocess.run(
-        ["git", "merge-base", "--is-ancestor", commit, "HEAD"], cwd=REPO,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    try:
+        result = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", commit, "HEAD"], cwd=REPO,
+            env={**os.environ, "GIT_NO_LAZY_FETCH": "1", "GIT_TERMINAL_PROMPT": "0"},
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.returncode == 0 if result.returncode in (0, 1) else None
 
 
 def is_path_within_repo(path):
@@ -157,8 +162,12 @@ def inspect_artifact(name):
     problems = list(record.validate())
     if record.summary() != doc.get("summary"):
         problems.append("saved summary differs from row recomputation")
-    if not _commit_is_in_history((meta.get("git") or {}).get("commit")):
-        problems.append("recorded commit is unavailable from current history")
+    in_history = _commit_is_in_history((meta.get("git") or {}).get("commit"))
+    # An unrelated local object and an object absent from a fresh clone both
+    # lack verified ancestry. Their shared audit record must not depend on
+    # unreachable objects retained in one checkout's object database.
+    if in_history is not True:
+        problems.append("recorded commit ancestry is not verified in current history")
     if meta.get("validation") != "ok":
         problems.append("artifact validation is not ok")
     gold = _current_gold(meta, rows)

@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import re
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -17,6 +18,44 @@ STATIC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))
 
 
 class DesignedVoiceUpdate(unittest.TestCase):
+    def test_failed_update_preserves_audio_and_success_keeps_assigned_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            first, manifest = self._save(tmp)
+            filename = manifest[0]["filename"]
+            audio_path = os.path.join(tmp, filename)
+            preview_path = os.path.join(tmp, "previews", "p.wav")
+            with open(preview_path, "wb") as fh:
+                fh.write(b"new audio")
+            req = vd.VoiceDesignSaveRequest(
+                name="Alto", description="changed", sample_text="s",
+                preview_file="p.wav", voice_id=first["voice_id"])
+            with patch.object(vd, "DESIGNED_VOICES_DIR", tmp), \
+                 patch.object(vd, "DESIGNED_VOICES_MANIFEST", os.path.join(tmp, "manifest.json")):
+                with patch.object(vd, "_save_manifest", side_effect=OSError("disk full")):
+                    with self.assertRaises(OSError):
+                        asyncio.run(vd.voice_design_save(req))
+                with open(audio_path, "rb") as fh:
+                    self.assertEqual(b"RIFF", fh.read())
+                asyncio.run(vd.voice_design_save(req))
+            with open(os.path.join(tmp, "manifest.json")) as fh:
+                updated = json.load(fh)
+            self.assertEqual(filename, updated[0]["filename"])
+            with open(audio_path, "rb") as fh:
+                self.assertEqual(b"new audio", fh.read())
+
+    def test_failed_delete_preserves_manifest_and_audio(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            first, manifest = self._save(tmp)
+            path = os.path.join(tmp, manifest[0]["filename"])
+            with patch.object(vd, "DESIGNED_VOICES_DIR", tmp), \
+                 patch.object(vd, "DESIGNED_VOICES_MANIFEST", os.path.join(tmp, "manifest.json")), \
+                 patch.object(vd, "_save_manifest", side_effect=OSError("disk full")):
+                with self.assertRaises(OSError):
+                    asyncio.run(vd.voice_design_delete(first["voice_id"]))
+            self.assertTrue(os.path.exists(path))
+            with open(os.path.join(tmp, "manifest.json")) as fh:
+                self.assertEqual(first["voice_id"], json.load(fh)[0]["id"])
+
     def _save(self, tmp, **over):
         previews = os.path.join(tmp, "previews")
         os.makedirs(previews, exist_ok=True)
@@ -64,10 +103,35 @@ class FrontendGuards(unittest.TestCase):
             if not os.path.exists(path):
                 continue
             with open(path, encoding="utf-8") as handle:
-                for i, line in enumerate(handle, 1):
-                    if "localStorage." in line and "try" not in line:
-                        offenders.append(f"{name}:{i}")
+                text = handle.read()
+            protected = set()
+            if name == os.path.join("js", "app-core.js"):
+                start = text.index('        function saveVoiceDraftRecord(')
+                end = text.index('        function enqueueVoiceDraft(', start)
+                protected.update(range(text[:start].count('\n') + 1,
+                                       text[:end].count('\n') + 1))
+                self.assert_voice_draft_storage_failures_are_caught(text[start:end])
+            for i, line in enumerate(text.splitlines(), 1):
+                if "localStorage." in line and "try" not in line and i not in protected:
+                    offenders.append(f"{name}:{i}")
         self.assertEqual([], offenders)
+
+    def assert_voice_draft_storage_failures_are_caught(self, source):
+        code = r"""
+const vm=require('vm'),assert=require('assert');
+const source=process.argv[1],record={key:'fixture'};
+for(const operation of ['saveVoiceDraftRecord','removeVoiceDraftRecord']){
+ for(const failure of operation==='saveVoiceDraftRecord'?['lookup','setItem','getItem']:['lookup','getItem','removeItem']){
+  const error=Error(failure),storage={setItem(){if(failure==='setItem'){throw error;}},getItem(){if(failure==='getItem'){throw error;}return JSON.stringify(record);},removeItem(){if(failure==='removeItem'){throw error;}}};
+  const window={};Object.defineProperty(window,'localStorage',{get(){if(failure==='lookup'){throw error;}return storage;}});
+  const ctx={window,record,error};vm.createContext(ctx);vm.runInContext('let _voiceDraftStorageError=null;'+source,ctx);
+  const result=ctx[operation](record);if(operation==='saveVoiceDraftRecord'){assert.strictEqual(result,false);}
+  assert(vm.runInContext('_voiceDraftStorageError===error',ctx));
+ }
+}
+"""
+        result = subprocess.run(['node', '-e', code, source], capture_output=True, text=True, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
 
     def test_dataset_delete_checks_the_response(self):
         with open(os.path.join(STATIC, "js", "app-workbench.js"), encoding="utf-8") as handle:

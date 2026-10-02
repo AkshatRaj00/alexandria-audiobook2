@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import shutil
@@ -15,12 +16,13 @@ from core import (
     _safe_subpath,
     _save_manifest,
     _save_upload_limited,
-    claim_gpu_task,
+    run_claimed_task_worker,
     process_state,
     project_manager,
 )
 from utils import file_lock, get_unique_id
 from voice_reference_import import import_reference_audio
+from tts import UnsupportedVoiceBackendError
 
 
 logger = logging.getLogger("AlexandriaUI")
@@ -58,7 +60,10 @@ def _append_manifest_entry(path, entry):
 @router.post("/api/voice_design/preview")
 async def voice_design_preview(request: VoiceDesignPreviewRequest):
     """Generate a preview voice from a text description."""
-    claim_gpu_task("voice_design")
+    return await run_claimed_task_worker("voice_design", _generate_voice_design_preview, request)
+
+
+def _generate_voice_design_preview(request):
     try:
         # Model initialization allocates VRAM too, so it belongs inside the same
         # reservation as inference rather than happening before the lock check.
@@ -73,11 +78,11 @@ async def voice_design_preview(request: VoiceDesignPreviewRequest):
         # Return relative URL for the static mount
         filename = os.path.basename(wav_path)
         return {"status": "ok", "audio_url": f"/designed_voices/previews/{filename}"}
+    except UnsupportedVoiceBackendError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as e:
         logger.exception("Voice design preview failed")
         raise HTTPException(status_code=500, detail="Voice design preview failed — see server logs for details.") from e
-    finally:
-        process_state["voice_design"]["running"] = False
 
 @router.post("/api/voice_design/save")
 async def voice_design_save(request: VoiceDesignSaveRequest):
@@ -105,15 +110,28 @@ async def voice_design_save(request: VoiceDesignSaveRequest):
             voice_id = get_unique_id(safe_name)
             dest_filename = f"{voice_id}.wav"
         dest_path = os.path.join(DESIGNED_VOICES_DIR, dest_filename)
-        shutil.copy2(preview_path, dest_path)
+        staging_path = os.path.join(DESIGNED_VOICES_DIR,
+                                    f".{dest_filename}.{get_unique_id('stage')}.tmp")
         entry = {"id": voice_id, "name": request.name,
                  "description": request.description, "sample_text": request.sample_text,
                  "filename": dest_filename}
-        if existing is not None:
-            existing.update(entry)
-        else:
-            manifest.append(entry)
-        _save_manifest(DESIGNED_VOICES_MANIFEST, manifest)
+        try:
+            shutil.copy2(preview_path, staging_path)
+            if existing is not None:
+                existing.update(entry)
+                _save_manifest(DESIGNED_VOICES_MANIFEST, manifest)
+                os.replace(staging_path, dest_path)
+            else:
+                os.replace(staging_path, dest_path)
+                manifest.append(entry)
+                try:
+                    _save_manifest(DESIGNED_VOICES_MANIFEST, manifest)
+                except Exception:
+                    os.remove(dest_path)
+                    raise
+        finally:
+            if os.path.exists(staging_path):
+                os.remove(staging_path)
 
     logger.info(f"Designed voice {'updated' if existing else 'saved'}: '{request.name}' as {dest_filename}")
     return {"status": "updated" if existing else "saved", "voice_id": voice_id}
@@ -123,6 +141,14 @@ async def voice_design_list():
     """List all saved designed voices."""
     return _load_manifest(DESIGNED_VOICES_MANIFEST)
 
+def get_voice_asset_path(base_dir, entry):
+    """Resolve a stored voice filename within its asset directory."""
+    name = entry.get("filename")
+    if not isinstance(name, str) or not name.strip():
+        raise HTTPException(status_code=400, detail="Invalid voice asset filename")
+    return _safe_subpath(base_dir, name)
+
+
 @router.delete("/api/voice_design/{voice_id}")
 async def voice_design_delete(voice_id: str):
     """Delete a saved designed voice."""
@@ -131,11 +157,11 @@ async def voice_design_delete(voice_id: str):
         entry = next((v for v in manifest if v["id"] == voice_id), None)
         if not entry:
             raise HTTPException(status_code=404, detail="Voice not found")
-        wav_path = os.path.join(DESIGNED_VOICES_DIR, entry["filename"])
-        if os.path.exists(wav_path):
-            os.remove(wav_path)
+        wav_path = get_voice_asset_path(DESIGNED_VOICES_DIR, entry)
         _save_manifest(DESIGNED_VOICES_MANIFEST,
                        [v for v in manifest if v["id"] != voice_id])
+        if os.path.exists(wav_path):
+            os.remove(wav_path)
 
     logger.info(f"Designed voice deleted: {voice_id}")
     return {"status": "deleted", "voice_id": voice_id}
@@ -186,33 +212,43 @@ async def clone_voices_upload(file: UploadFile = File(...),
     upload_path = os.path.join(CLONE_VOICES_DIR, f".upload_{voice_id}{ext}")
 
     await _save_upload_limited(file, upload_path, 512 * 1024**2)
-    try:
-        measures, problems = import_reference_audio(upload_path, dest_path)
-    finally:
-        if os.path.exists(upload_path):
-            os.remove(upload_path)
-    if problems:
-        if os.path.exists(dest_path):
-            os.remove(dest_path)
-        raise HTTPException(status_code=400, detail="Reference clip refused: " + "; ".join(problems))
+    def _import():
+        try:
+            measures, problems = import_reference_audio(upload_path, dest_path)
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+        if problems:
+            if os.path.exists(dest_path):
+                os.remove(dest_path)
+            raise HTTPException(status_code=400, detail="Reference clip refused: " + "; ".join(problems))
 
-    _append_manifest_entry(CLONE_VOICES_MANIFEST, {
-        "id": voice_id,
-        "name": base_name,
-        "filename": dest_filename,
-        "ref_text": ref_text,
-        "source_title": source_title,
-        "source_url": source_url,
-        "rights_basis": rights_basis,
-        "rights_confirmed": True,
-        "imported_at": time.time(),
-        **measures,
-    })
+        try:
+            _append_manifest_entry(CLONE_VOICES_MANIFEST, {
+                "id": voice_id,
+                "name": base_name,
+                "filename": dest_filename,
+                "ref_text": ref_text,
+                "source_title": source_title,
+                "source_url": source_url,
+                "rights_basis": rights_basis,
+                "rights_confirmed": True,
+                "imported_at": time.time(),
+                **measures,
+            })
+        except BaseException:
+            # This immutable import owns its new file until the manifest accepts it.
+            if os.path.exists(dest_path):
+                os.remove(dest_path)
+            raise
 
-    logger.info(f"Clone voice imported: '{base_name}' as {dest_filename} "
-                f"({measures['duration_s']}s, sha256 {measures['sha256'][:12]})")
-    return {"status": "uploaded", "voice_id": voice_id, "filename": dest_filename,
-            "measures": measures}
+
+        logger.info(f"Clone voice imported: '{base_name}' as {dest_filename} "
+                    f"({measures['duration_s']}s, sha256 {measures['sha256'][:12]})")
+        return {"status": "uploaded", "voice_id": voice_id, "filename": dest_filename,
+                "measures": measures}
+
+    return await asyncio.to_thread(_import)
 
 @router.delete("/api/clone_voices/{voice_id}")
 async def clone_voices_delete(voice_id: str):
@@ -222,7 +258,7 @@ async def clone_voices_delete(voice_id: str):
         entry = next((v for v in manifest if v["id"] == voice_id), None)
         if not entry:
             raise HTTPException(status_code=404, detail="Clone voice not found")
-        wav_path = os.path.join(CLONE_VOICES_DIR, entry["filename"])
+        wav_path = get_voice_asset_path(CLONE_VOICES_DIR, entry)
         if os.path.exists(wav_path):
             os.remove(wav_path)
         _save_manifest(CLONE_VOICES_MANIFEST,
