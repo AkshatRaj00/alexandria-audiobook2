@@ -13,7 +13,7 @@ preparer = support.preparer
 
 
 class PreparerBatchOutcomeTests(unittest.TestCase):
-    def run_annotation(self, failed_chunk=None, valid_batch=False):
+    def run_annotation(self, failed_chunk=None, valid_batch=False, rewritten_chunk=None, batch_size=2):
         words = [{'word': text, 'start': i * 1.2, 'end': (i + 1) * 1.2,
                   'confidence': 1, 'speaker': 'ONLY'}
                  for i, text in enumerate(('First.', 'Second.', 'Third.'))]
@@ -27,6 +27,8 @@ class PreparerBatchOutcomeTests(unittest.TestCase):
                 content = prompt.split('Annotate this segment:\n', 1)[1]
                 if content == failed_chunk:
                     raise RuntimeError('fixture chunk failure')
+                if content == rewritten_chunk:
+                    content = 'Invented words.'
             return {'choices': [{'message': {'content': content}}]}
         llm = SimpleNamespace(create_chat_completion=complete)
         samples = np.sin(np.arange(86400) * .05).astype('float32') * .1
@@ -36,7 +38,7 @@ class PreparerBatchOutcomeTests(unittest.TestCase):
             try:
                 with patch.object(preparer, 'ensure_run_manifest'), patch.object(preparer, '_load_llm', return_value=llm), patch.object(preparer, 'log_gpu_stats'), patch.object(preparer, '_calculate_chunk_snr', return_value=80), self.assertLogs('alexandria', 'DEBUG') as logs:
                     rows = preparer.annotate_chunks(words, 'mock.gguf', 1, samples,
-                        min_chunk_duration=1, batch_size=2, run_identity={'test': 'fixture'})
+                        min_chunk_duration=1, batch_size=batch_size, run_identity={'test': 'fixture'})
                 persisted = [json.loads(line) for line in Path('dataset_temp/metadata.jsonl').read_text().splitlines()]
                 self.assertEqual(['First.', 'Second.', 'Third.'], [row['text'] for row in persisted])
                 self.assertEqual(3, len(rows))

@@ -550,11 +550,12 @@ class ProjectManager:
             logger.warning("chunks.json is corrupted; backing it up to %s and regenerating.", backup)
             try:
                 os.replace(self.chunks_path, backup)
-            except OSError:
-                try:
-                    os.remove(self.chunks_path)
-                except OSError:
-                    pass
+            except OSError as error:
+                raise OSError(
+                    f"Cannot preserve corrupted chunks at {self.chunks_path} "
+                    f"in {backup}; refusing regeneration. Preserve the original "
+                    "file and resolve the backup failure before retrying."
+                ) from error
 
         # If no chunks (or corrupted), generate from script
         if os.path.exists(self.script_path):
@@ -807,7 +808,7 @@ class ProjectManager:
                 self._remove_temp_file(staged_path)
 
     def _reset_captured_generations(self, captured, indices, done_indices):
-        """Reset only pending generation owners; return count and stale failures."""
+        """Reset generating owners; count unfinished requests and report stale inputs."""
         count, failed = 0, []
         for idx in indices:
             if idx in done_indices:
@@ -824,6 +825,9 @@ class ProjectManager:
                     failed.append((idx, GENERATION_INPUTS_CHANGED))
                 else:
                     count += 1
+            else:
+                # A cancelled queued worker never changed the captured row.
+                count += 1
         return count, failed
 
     def generate_chunk_audio(self, index):
@@ -873,9 +877,14 @@ class ProjectManager:
             # Pass canonical speaker to the TTS engine so it uses the aliased config;
             # the identity anchor in force at this line (a character can change
             # from a point in the book - tts.active_character_style)
-            success = engine.generate_voice(
-                text, instruct, speaker_to_use,
+            generation_args = (text, instruct, speaker_to_use,
                 voice_config_for_chunk(voice_config, speaker_to_use, index), temp_path)
+            failure = None
+            if callable(getattr(engine, "generate_voice_result", None)):
+                result = engine.generate_voice_result(*generation_args)
+                success, failure = result.success, result.failure
+            else:
+                success = engine.generate_voice(*generation_args)
 
             if success:
                 validate_generated_audio(
@@ -888,7 +897,7 @@ class ProjectManager:
 
                 return True, audio_path
             else:
-                message = "Generation returned False"
+                message = failure.get_message() if failure else "Generation returned False"
                 updated = self._update_chunk_fields_by_uid(
                     chunk["uid"], expected_chunk=chunk, status="error", error=message)
                 return False, message if updated is not None else GENERATION_INPUTS_CHANGED

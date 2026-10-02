@@ -487,6 +487,14 @@
     "tests.test_attribution_checkpoint_shapes.AttributionCheckpointShapeTests.test_native_named_entries_and_result_lists_share_one_shape_contract",
     "tests.test_attribution_checkpoint_shapes.AttributionCheckpointShapeTests.test_scoring_readers_replay_latest_indexed_attribution"
   ],
+  "test_attribution_coverage": [
+    "tests.test_attribution_coverage.AttributionCoverageTests.test_actual_score_cli_reports_end_to_end_delta_when_eligible",
+    "tests.test_attribution_coverage.AttributionCoverageTests.test_actual_score_cli_withholds_sparse_comparison_but_displays_both_metrics",
+    "tests.test_attribution_coverage.AttributionCoverageTests.test_comparison_artifact_marks_low_coverage_without_dropping_manual_sample",
+    "tests.test_attribution_coverage.AttributionCoverageTests.test_disputed_rows_are_excluded_from_both_denominators",
+    "tests.test_attribution_coverage.AttributionCoverageTests.test_empty_missing_and_exact_threshold",
+    "tests.test_attribution_coverage.AttributionCoverageTests.test_sparse_perfect_has_lower_end_to_end_accuracy_and_is_ineligible"
+  ],
   "test_attribution_hybrid": [
     "tests.test_attribution_hybrid.AttributionHybridTest.test_cli_policy_file_shape_is_json_serializable",
     "tests.test_attribution_hybrid.AttributionHybridTest.test_confidence_policy_falls_back_on_abstention_or_low_confidence",
@@ -617,6 +625,8 @@
   ],
   "test_batch_prepared_sources": [
     "tests.test_batch_prepared_sources.BatchPreparedSourcesTests.test_actual_start_and_background_preflight_read_each_source_once",
+    "tests.test_batch_prepared_sources.BatchPreparedSourcesTests.test_atomic_claim_rechecks_busy_state_after_preparation",
+    "tests.test_batch_prepared_sources.BatchPreparedSourcesTests.test_busy_batch_refuses_before_source_preparation",
     "tests.test_batch_prepared_sources.BatchPreparedSourcesTests.test_changed_source_revalidates_narrator_even_if_size_and_mtime_match",
     "tests.test_batch_prepared_sources.BatchPreparedSourcesTests.test_source_changed_during_preparation_is_refused_before_dispatch",
     "tests.test_batch_prepared_sources.BatchPreparedSourcesTests.test_source_replacement_and_removal_cannot_reuse_cached_text"
@@ -2278,6 +2288,16 @@
     "tests.test_enricher_preflight_json.EnricherPreflightJsonTests.test_unparseable_response_remains_marked_as_failed",
     "tests.test_enricher_preflight_json.EnricherPreflightJsonTests.test_valid_input_is_enriched_and_exact_nested_output_is_published"
   ],
+  "test_enrichment_resume": [
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_changed_fields_or_runtime_identity_repeats_all_rows",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_changed_source_and_same_size_mtime_model_invalidate_rows",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_checkpoint_write_failure_stops_calls_and_closes_model",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_complete_checkpoint_recovers_publication_without_loading_model",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_corrupt_source_row_fails_before_model_load_or_publication",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_failed_row_is_retried_after_interruption",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_interrupted_run_skips_three_accepted_rows_preserving_source_and_order",
+    "tests.test_enrichment_resume.EnrichmentResumeTests.test_model_changed_during_load_is_closed_without_calls"
+  ],
   "test_ensure_llama_server_default": [
     "tests.test_ensure_llama_server_default.DefaultModelTest.test_a_missing_model_file_is_refused_rather_than_served",
     "tests.test_ensure_llama_server_default.DefaultModelTest.test_an_explicit_model_still_wins",
@@ -3322,6 +3342,23 @@
     "tests.test_identity_gate_completion.IdentityCompletionTests.test_rejects_partial_forged_wrong_scope_and_nonfinite_results",
     "tests.test_identity_gate_completion.IdentityCompletionTests.test_same_path_input_byte_changes_invalidate_cache",
     "tests.test_identity_gate_completion.IdentityCompletionTests.test_zip_identity_is_bound_to_archive_bytes"
+  ],
+  "test_improvement_content_integrity": [
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_batch_rejects_swapped_rewritten_and_dropped_words_without_counting_success",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_cli_no_selected_fields_publishes_unchanged_rows_without_gpu_work",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_duplicate_transcript_conflict_preserves_previous_output_and_cleans_staging",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_empty_enrichment_selection_does_not_acquire_a_lease_or_load_a_model",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_failed_per_chunk_mode_annotation_keeps_original_text_and_audio",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_failed_singleton_annotation_keeps_original_text_and_audio",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_missing_spine_document_is_an_error_not_an_empty_or_partial_source",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_non_linear_spine_documents_are_not_read_as_book_text",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_prosody_punctuation_case_and_unicode_composition_are_admitted",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_real_epub_uses_spine_and_excludes_navigation_and_unlisted_documents",
+    "tests.test_improvement_content_integrity.ImprovementContentIntegrityTests.test_version_three_merge_cannot_hide_an_existing_transcript_conflict"
+  ],
+  "test_improvement_ui_errors_js": [
+    "tests.test_improvement_ui_errors_js.ImprovementUiErrorTests.test_config_failure_is_visible_preserves_inputs_and_success_clears_retry",
+    "tests.test_improvement_ui_errors_js.ImprovementUiErrorTests.test_sample_error_is_escaped_visible_cleared_on_retry_and_not_applied_to_other_project"
   ],
   "test_index_added_commit_lag": [
     "tests.test_index_added_commit_lag.AddedCommitLagTests.test_a_change_in_any_other_column_is_not_forgiven",
@@ -4778,6 +4815,14 @@
     "tests.test_preparer_dual_decode.PreparerDualDecodeTests.test_decoder_failure_removes_temporary_asr_directory",
     "tests.test_preparer_dual_decode.PreparerDualDecodeTests.test_independent_streams_match_old_two_decodes_sample_exactly"
   ],
+  "test_preparer_enrichment_settings": [
+    "tests.test_preparer_enrichment_settings.PreparerEnrichmentSettingsTests.test_api_refuses_with_the_same_400_before_any_admission",
+    "tests.test_preparer_enrichment_settings.PreparerEnrichmentSettingsTests.test_api_with_a_category_gets_past_the_enrichment_check",
+    "tests.test_preparer_enrichment_settings.PreparerEnrichmentSettingsTests.test_cli_refuses_before_any_work_and_names_the_flags",
+    "tests.test_preparer_enrichment_settings.PreparerEnrichmentSettingsTests.test_one_category_is_enough_and_disabled_enrichment_ignores_categories",
+    "tests.test_preparer_enrichment_settings.PreparerEnrichmentSettingsTests.test_rule_does_not_mutate_its_input",
+    "tests.test_preparer_enrichment_settings.PreparerEnrichmentSettingsTests.test_rule_refuses_enrichment_with_nothing_selected"
+  ],
   "test_preparer_gpu_logging": [
     "tests.test_preparer_gpu_logging.PreparerGpuLoggingTests.test_broken_pipe_retry_preserves_the_requested_layers",
     "tests.test_preparer_gpu_logging.PreparerGpuLoggingTests.test_failed_warmup_is_not_reported_as_verified",
@@ -4992,6 +5037,7 @@
     "tests.test_project_chunks.ScenBreakPauseSurvivesGroupingTest.test_explicit_zero_pause_survives_persisted_chunks_and_timeline",
     "tests.test_project_chunks.ScenBreakPauseSurvivesGroupingTest.test_several_scene_breaks_each_keep_their_silence",
     "tests.test_project_chunks.ScriptShapeRegenerationTests.test_corrupt_chunk_backup_survives_invalid_source_shape",
+    "tests.test_project_chunks.ScriptShapeRegenerationTests.test_failed_corrupt_backup_preserves_original_and_refuses_regeneration",
     "tests.test_project_chunks.ScriptShapeRegenerationTests.test_malformed_json_shapes_warn_without_replacing_source_or_writing_chunks",
     "tests.test_project_chunks.ScriptShapeRegenerationTests.test_valid_empty_and_nonempty_arrays_keep_regeneration_and_uid_persistence",
     "tests.test_project_chunks.SpeakableEntryTests.test_block_glyphs_and_leading_marks_are_not_sent_to_tts",
@@ -5011,6 +5057,7 @@
     "tests.test_project_export_staging.ExportStagingTests.test_overlapping_m4b_exports_keep_each_calls_wav_and_metadata"
   ],
   "test_project_status_journal": [
+    "tests.test_project_status_journal.ProjectStatusJournalTests.test_cancelled_queued_generation_is_counted_without_changing_prior_state",
     "tests.test_project_status_journal.ProjectStatusJournalTests.test_changed_book_refuses_publication_and_preserves_old_journal",
     "tests.test_project_status_journal.ProjectStatusJournalTests.test_editing_target_rejects_old_audio_without_reverting_edit",
     "tests.test_project_status_journal.ProjectStatusJournalTests.test_oom_retry_steps_down_and_finally_compacts_after_cancel_or_callback_failure",
@@ -7269,6 +7316,16 @@
     "tests.test_tts_external_pool.ExternalPoolTests.test_timed_out_call_never_publishes_its_late_audio",
     "tests.test_tts_external_pool.ExternalPoolTests.test_unreadable_gpu_model_config_limits_batch_to_one",
     "tests.test_tts_external_pool.ExternalPoolTests.test_valid_external_output_is_copied_and_fully_decodable"
+  ],
+  "test_tts_failure_results": [
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_concurrent_external_requests_keep_causes_isolated_and_redacted",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_external_invalid_audio_preserves_prior_output",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_legacy_boolean_and_unknown_false_have_no_stale_failure",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_native_chunk_json_preserves_previously_lost_causes",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_oom_reference_and_empty_audio_have_specific_causes",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_stale_input_refuses_failure_and_legacy_false_remains_compatible",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_success_discards_failure_and_ensemble_retains_member_cause",
+    "tests.test_tts_failure_results.TTSFailureResultTests.test_timeout_late_failure_cannot_contaminate_next_success"
   ],
   "test_tts_output_boundary": [
     "tests.test_tts_output_boundary.TtsOutputBoundaryTests.test_bad_ids_and_repetitions_fail_before_wav_generation",
