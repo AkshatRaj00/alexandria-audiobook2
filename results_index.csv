@@ -193,6 +193,7 @@ chapter_cuts_cleangold_20260914.json,supported_structure,provenance,yes,,,,,,,,,
 chapter_manifest.json,exploratory,none,no,,701371d1,,,,,,,,,,,,,,,,,,,,,,SKIPPED: not a result object (list)
 chapter_validation.json,exploratory,none,no,,701371d1,3.2,,,,,,,,,,,,,,,,,,,,,SKIPPED: 'rows' is not a list of scored arms
 character_distinctiveness.json,supported_structure,provenance,yes,,,6.5,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
+character_traits.json,supported_structure,provenance,yes,,,,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
 chinese_attribution__r16_seed20260904__jy_test__20260908.json,exploratory,git+naming,no,chinese_attribution.py,89fc5bf8,,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: no 'rows' list - this table only represents per-arm attribution results
 chinese_attribution__r16_seed20260904__wp_test__20260908.json,exploratory,git+naming,no,chinese_attribution.py,89fc5bf8,,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: no 'rows' list - this table only represents per-arm attribution results
 chinese_attribution__r16_seed20260905__jy_test__20260908.json,exploratory,git+naming,no,chinese_attribution.py,89fc5bf8,,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: no 'rows' list - this table only represents per-arm attribution results
@@ -4142,6 +4143,7 @@ tight_rebuild__velvety_mezzo_30s_f_gothic__rebuilt.json,supported_structure,prov
 tight_rebuild__velvety_mezzo_30s_f_gothic__shipped.json,supported_structure,provenance,yes,,,,1234,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
 tight_rebuild__warm_baritone_40s_m_1__rebuilt.json,supported_structure,provenance,yes,,,,1234,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
 tight_rebuild__warm_baritone_40s_m_1__shipped.json,supported_structure,provenance,yes,,,,1234,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
+time_skip_traits.json,supported_structure,provenance,yes,,,,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
 time_split__warm_baritone_30s_m_1_generate.json,supported_structure,provenance,yes,,,,1234,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
 tone_spread_sensitivity.json,supported_structure,provenance,yes,,,2.7,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: TTS provenance artifact; read its per-book/category summary directly
 training_composition.json,exploratory,git+naming,no,training_composition.py,e544836e,,,,,,,,,,,,,,,,,,,,,,NOT INDEXED: no 'rows' list - this table only represents per-arm attribution results
