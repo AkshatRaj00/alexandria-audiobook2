@@ -580,3 +580,44 @@ class PersonaEmptyFixtureTests(unittest.TestCase):
             self.assertEqual(1, result['discovery_calls'])
             self.assertEqual(1, result['compile_calls'])
         self.assertEqual(original, fixture)
+
+
+def test_lora_training_worker_cleans_remote_staging_directory():
+    """Ensure remote LoRA staging path is pruned via SSH rm -rf after run completion."""
+    from unittest.mock import patch
+    import shlex
+    from types import SimpleNamespace
+    import app.benchmark_runner as runner
+
+    calls = []
+    def fake_subprocess(command, **kwargs):
+        calls.append(command)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    fixture = {
+        "sha256": "fake_sha_test",
+        "dataset_path": "dataset_stub",
+        "audio_sha256": {}
+    }
+    settings = {
+        "remote_root": "/remote",
+        "remote_python": "python3"
+    }
+
+    with patch.object(runner, "run_benchmark_subprocess", side_effect=fake_subprocess), \
+         patch.object(runner, "run_benchmark_worker", return_value={"status": "passed"}):
+        runner._run_lora_training_worker(fixture, "thunder", settings, "/local/root", "test-host")
+
+    # Verify remote cleanup command was dispatched
+    expected_cleanup_suffix = ["rm", "-rf", "--", "/tmp/alexandria-lora-training-fake_sha_test"]
+    cleanup_called = False
+    for cmd in calls:
+        if cmd[0] == "ssh" and any("rm -rf -- /tmp/alexandria-lora-training-fake_sha_test" in part for part in cmd):
+            cleanup_called = True
+            break
+        if cmd[:4] == ["ssh", "test-host", "--", "rm"]:
+            cleanup_called = True
+            break
+
+    assert any("rm" in str(cmd) and "/tmp/alexandria-lora-training-fake_sha_test" in str(cmd) for cmd in calls), \
+        f"Remote staging cleanup command not found in calls: {calls}"

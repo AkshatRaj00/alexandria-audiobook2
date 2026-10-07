@@ -1,4 +1,4 @@
-"""Production-backed benchmark stage adapters."""
+﻿"""Production-backed benchmark stage adapters."""
 
 import hashlib
 import io
@@ -364,7 +364,7 @@ def _run_lora_training_worker(fixture, target, settings, root_dir, ssh_alias):
     encoded = get_encoded_worker_payload(payload)
     worker_command = [python_executable, worker_script, "--payload", encoded]
     command = get_benchmark_worker_command(worker_command, target, ssh_alias)
-    return run_benchmark_worker(command, 'LORA_TRAINING_BENCHMARK_RESULT=', 'training worker failed', timeout=7200)
+    try:`r`n        return run_benchmark_worker(command, 'LORA_TRAINING_BENCHMARK_RESULT=', 'training worker failed', timeout=7200)`r`n    finally:`r`n        if target != "local" and ssh_alias and "remote_source" in locals():`r`n            cleanup_cmd = get_remote_benchmark_command(ssh_alias, ["rm", "-rf", "--", remote_source])`r`n            run_benchmark_subprocess(cleanup_cmd, capture_output=True, text=True, timeout=60, check=False)
 
 
 def apply_benchmark_cancellation(state, report, manifest, report_path):
